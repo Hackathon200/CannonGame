@@ -27,7 +27,7 @@ public class Cannonball extends GameElement {
     }
 
     public boolean collidesWith(GameElement element) {
-        return (Rect.intersects(mShape, element.mShape) && velocityX > 0);
+        return (Rect.intersects(mShape, element.mShape));
     }
 
     public boolean isOnScreen() {
