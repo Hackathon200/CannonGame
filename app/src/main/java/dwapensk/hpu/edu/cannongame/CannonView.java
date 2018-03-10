@@ -56,6 +56,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     public static final double TEXT_SIZE_PERCENT = 1.0/18;
 
     private CannonThread mCannonThread;
+    private SpawnNewTargetsThread mSpawnNewTargetsThread;
     private Activity mActivity;
     private boolean dialogIsDisplayed = false;
     private Cannon mCannon;
@@ -67,6 +68,8 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     private double mTimeLeft;
     private int mShotsFired;
     private double mTotalElapsedTime;
+    private Random random = new Random();
+    private int mTargetsHit;
 
     public static final int TARGET_SOUND_ID = 0;
     public static final int CANNON_SOUND_ID = 1;
@@ -75,8 +78,6 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     private SparseIntArray mSoundMap;
     private Paint mTextPaint;
     private Paint mBackgroundPaint;
-
-    private Point testPoint;
 
     public CannonView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -124,32 +125,13 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void newGame() {
+        mTargetsHit = 0;
         mCannon = new Cannon(this, (int) (CANNON_BASE_RADIUS_PERCENT * mScreenHeight),
                 (int) (CANNON_BARREL_LENGTH_PERCENT * mScreenWidth),
                 (int) (CANNON_BARREL_WIDTH_PERCENT * mScreenHeight));
-        Random random = new Random();
+
         mTargets = new ArrayList<>();
-
-        int targetX = (int) (TARGET_FIRST_X_PERCENT * mScreenWidth);
-        int targetY = (int) ((0.5-TARGET_LENGTH_PERCENT / 2) * mScreenHeight);
-
-        for (int n=0; n<TARGET_PIECES; n++) {
-            double velocity = mScreenHeight * (random.nextDouble() *
-                    (TARGET_MAX_SPEED_PERCENT - TARGET_MIN_SPEED_PERCENT) + TARGET_MIN_SPEED_PERCENT);
-
-            int color = (n%2==0) ?
-                    getResources().getColor(R.color.dark, getContext().getTheme()) :
-                    getResources().getColor(R.color.light, getContext().getTheme());
-
-            velocity *= -1;
-
-            mTargets.add(new Target(this, color, HIT_REWARD, targetX, targetY,
-                    (int) (TARGET_WIDTH_PERCENT * mScreenWidth),
-                    (int) (TARGET_LENGTH_PERCENT * mScreenHeight),
-                    (int) velocity));
-
-            targetX += (TARGET_WIDTH_PERCENT + TARGET_SPACING_PERCENT) * mScreenWidth;
-        }
+        spawnNewTarget();
 
         mBlocker = new Blocker(this, Color.BLACK, MISS_PENALTY,
                 (int) (BLOCKER_X_PERCENT * mScreenWidth),
@@ -167,9 +149,48 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             mGameOver = false;
             mCannonThread = new CannonThread(getHolder());
             mCannonThread.start();
+            mSpawnNewTargetsThread = new SpawnNewTargetsThread();
+            mSpawnNewTargetsThread.start();
         }
 
         hideSystemBars();
+    }
+
+    private void spawnNewTarget() {
+        int randX = random.nextInt(2);
+        int randSide = random.nextInt(2);
+        int targetX;
+        int targetY;
+        if (randX == 0 && randSide == 0) { //spawns on top and left
+            targetX = random.nextInt(mScreenWidth / 2 - 200) + 100;
+            targetY = 0;
+        } else if (randX == 0 && randSide == 1) { //spawns on top and right
+            targetX = random.nextInt(mScreenWidth / 2 - 200) + mScreenWidth/2 + 100;
+            targetY = 0;
+        } else if (randX == 1 && randSide == 0) { //spawns on bottom and left
+            targetX = random.nextInt(mScreenWidth / 2 - 200) + 100;
+            targetY = mScreenHeight;
+        } else {
+            targetX = random.nextInt(mScreenWidth / 2 - 200) + mScreenWidth/2 + 100;
+            targetY = mScreenHeight;
+        }
+
+        double velocity = mScreenHeight * (random.nextDouble() *
+                (TARGET_MAX_SPEED_PERCENT - TARGET_MIN_SPEED_PERCENT) + TARGET_MIN_SPEED_PERCENT);
+
+        int color = random.nextInt(2);
+        if (color == 0) {
+            color = getResources().getColor(R.color.dark, getContext().getTheme());
+        } else {
+            color = getResources().getColor(R.color.light, getContext().getTheme());
+        }
+
+        velocity *= -1;
+
+        mTargets.add(new Target(this, color, HIT_REWARD, targetX, targetY,
+                (int) (TARGET_WIDTH_PERCENT * mScreenWidth),
+                (int) (TARGET_LENGTH_PERCENT * mScreenHeight),
+                (int) velocity));
     }
 
     private void updatePositions(double elapsedTimeMS) {
@@ -190,20 +211,22 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             mTimeLeft = 0.0;
             mGameOver = true;
             mCannonThread.setRunning(false);
+            mSpawnNewTargetsThread.setThreadIsRunning(false);
             showGameOverDialog(R.string.lose);
         }
-        if (mTargets.isEmpty()) {
+        /*if (mTargets.isEmpty()) {
             mCannonThread.setRunning(false);
+            mSpawnNewTargetsThread.setThreadIsRunning(false);
             showGameOverDialog(R.string.win);
             mGameOver = true;
-        }
+        }*/
     }
 
     public void alignAndFireCannonball(MotionEvent event) {
         Point touchPoint = new Point((int) event.getX(), (int) event.getY());
         double angle = 0;
         angle = Math.atan2(mScreenHeight/2-touchPoint.y,touchPoint.x-mScreenWidth/2);
-        testPoint = touchPoint;
+
         if (angle < 0) {
             angle += Math.PI*2;
         }
@@ -255,7 +278,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             mCannon.getCannonball().draw(canvas, bitmap);
         }
 
-        mBlocker.draw(canvas);
+        //mBlocker.draw(canvas);
         for (GameElement target : mTargets) {
             target.draw(canvas);
         }
@@ -271,6 +294,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
                     mCannon.removeCannonball();
                     mTargets.remove(n);
                     --n;
+                    mTargetsHit++;
                     break;
                 }
             }
@@ -278,16 +302,14 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             mCannon.removeCannonball();
         }
 
-        if (mCannon.getCannonball() != null && mCannon.getCannonball().collidesWith(mBlocker)) {
-            mBlocker.playSound();
-            mCannon.getCannonball().reverseVelocityX();
-            mTimeLeft -= mBlocker.getMissPenalty();
-        }
     }
 
     public void stopGame() {
         if (mCannonThread != null) {
             mCannonThread.setRunning(false);
+        }
+        if (mSpawnNewTargetsThread != null) {
+            mSpawnNewTargetsThread.setThreadIsRunning(false);
         }
     }
 
@@ -308,6 +330,9 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             mCannonThread = new CannonThread(holder);
             mCannonThread.setRunning(true);
             mCannonThread.start();
+            mSpawnNewTargetsThread = new SpawnNewTargetsThread();
+            mSpawnNewTargetsThread.setThreadIsRunning(true);
+            mSpawnNewTargetsThread.start();
         }
     }
 
@@ -315,9 +340,11 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
         boolean retry = true;
         mCannonThread.setRunning(false);
+        mSpawnNewTargetsThread.setThreadIsRunning(false);
         while (retry) {
             try {
                 mCannonThread.join();
+                mSpawnNewTargetsThread.join();
                 retry = false;
             } catch (InterruptedException e) {
                 Log.e(TAG, "Thread interrupted", e);
@@ -396,5 +423,33 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
     }
-}
 
+    private class SpawnNewTargetsThread extends Thread {
+        private boolean mThreadIsRunning = true;
+
+        public void setThreadIsRunning(boolean running) {
+            mThreadIsRunning = running;
+        }
+
+        @Override
+        public void run() {
+            while (mThreadIsRunning) {
+                try {
+                    if (mTargets.isEmpty()) {
+                        for (int i = 0; i < mTargetsHit; i++) {
+                            spawnNewTarget();
+                            sleep(250);
+                        }
+                    } else {
+                        sleep(500);
+                    }
+                    /*sleep(999);
+                    spawnNewTarget();*/
+                } catch (InterruptedException e) {
+                    mTargets = new ArrayList<>();
+                    spawnNewTarget();
+                }
+            }
+        }
+    }
+}
