@@ -41,7 +41,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     public static final double CANNON_BARREL_WIDTH_PERCENT = 3.0/40;
     public static final double CANNON_BARREL_LENGTH_PERCENT = 1.0/10;
     public static final double CANNONBALL_RADIUS_PERCENT = 3.0/80;
-    public static final double CANNONBALL_SPEED_PERCENT = 3.0/2;
+    public static final double CANNONBALL_SPEED_PERCENT = 1.8/2;
     public static final double TARGET_WIDTH_PERCENT = 1.0/40;
     public static final double TARGET_LENGTH_PERCENT = 3.0/20;
     public static final double TARGET_FIRST_X_PERCENT = 3.0/5;
@@ -75,6 +75,8 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     private SparseIntArray mSoundMap;
     private Paint mTextPaint;
     private Paint mBackgroundPaint;
+
+    private Point testPoint;
 
     public CannonView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -199,9 +201,12 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void alignAndFireCannonball(MotionEvent event) {
         Point touchPoint = new Point((int) event.getX(), (int) event.getY());
-        double centerMinusY = (mScreenHeight / 2 - touchPoint.y);
         double angle = 0;
-        angle = Math.atan2(touchPoint.x, centerMinusY);
+        angle = Math.atan2(mScreenHeight/2-touchPoint.y,touchPoint.x-mScreenWidth/2);
+        testPoint = touchPoint;
+        if (angle < 0) {
+            angle += Math.PI*2;
+        }
         mCannon.align(angle);
 
         if (mCannon.getCannonball() == null || !mCannon.getCannonball().isOnScreen()) {
@@ -392,3 +397,4 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 }
+
