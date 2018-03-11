@@ -270,7 +270,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void drawGameElements(Canvas canvas) {
         canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), mBackgroundPaint);
-        canvas.drawText(getResources().getString(R.string.time_remaining_format, mTimeLeft), 50, 100, mTextPaint);
+        canvas.drawText(getResources().getString(R.string.time_remaining_format, mTimeLeft, mNumTargets-1), 50, 100, mTextPaint);
         mCannon.draw(canvas);
 
         if (mCannon.getCannonball() != null && mCannon.getCannonball().isOnScreen()) {
@@ -290,7 +290,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             for (int n = 0; n < mTargets.size(); n++) {
                 if (mCannon.getCannonball().collidesWith(mTargets.get(n))) {
                     mTargets.get(n).playSound();
-                    mTimeLeft += mTargets.get(n).getHitReward();
+                    //mTimeLeft += mTargets.get(n).getHitReward();
                     mCannon.removeCannonball();
                     mTargets.remove(n);
                     --n;
@@ -439,12 +439,11 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
                             spawnNewTarget();
                             sleep(250);
                         }
+                        mTimeLeft += 7;
                         mNumTargets++;
                     } else {
                         sleep(500);
                     }
-                    /*sleep(999);
-                    spawnNewTarget();*/
                 } catch (InterruptedException e) {
                     mTargets = new ArrayList<>();
                     spawnNewTarget();
