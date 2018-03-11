@@ -20,5 +20,11 @@ public class MainActivity extends AppCompatActivity {
             fm.beginTransaction().add(R.id.fragment_container, fragment).commit();
         }
     }
-}
 
+    protected void backToTitleFrag() {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new TitleFragment(),"findThisFragment")
+                .addToBackStack(null)
+                .commit();
+    }
+}
