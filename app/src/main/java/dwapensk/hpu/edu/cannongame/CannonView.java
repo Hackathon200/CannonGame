@@ -1,34 +1,33 @@
 package dwapensk.hpu.edu.cannongame;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Point;
-import android.media.AudioAttributes;
-import android.media.SoundPool;
-import android.nfc.Tag;
-import android.os.Build;
-import android.os.Bundle;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.util.SparseIntArray;
-import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
+        import android.app.Activity;
+        import android.app.AlertDialog;
+        import android.app.Dialog;
+        import android.app.DialogFragment;
+        import android.content.Context;
+        import android.content.DialogInterface;
+        import android.graphics.Bitmap;
+        import android.graphics.BitmapFactory;
+        import android.graphics.Canvas;
+        import android.graphics.Color;
+        import android.graphics.Paint;
+        import android.graphics.Point;
+        import android.media.AudioAttributes;
+        import android.media.SoundPool;
+        import android.os.Build;
+        import android.os.Bundle;
+        import android.util.AttributeSet;
+        import android.util.Log;
+        import android.util.SparseIntArray;
+        import android.view.MotionEvent;
+        import android.view.SurfaceHolder;
+        import android.view.SurfaceView;
+        import android.view.View;
 
-import java.util.ArrayList;
-import java.util.Random;
+        import java.util.ArrayList;
+        import java.util.Random;
 
-import static android.content.ContentValues.TAG;
+        import static android.content.ContentValues.TAG;
 
 /**
  * Created by obft1 on 2/23/2018.
@@ -253,6 +252,13 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
                                 newGame();
                             }
                         });
+                builder.setNegativeButton(R.string.back_to_title, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogIsDisplayed = false;
+                        ((MainActivity) getActivity()).backToTitleFrag();
+                    }
+                });
                 return builder.create();
             }
         };
