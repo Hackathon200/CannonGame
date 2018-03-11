@@ -69,7 +69,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     private int mShotsFired;
     private double mTotalElapsedTime;
     private Random random = new Random();
-    private int mTargetsHit;
+    private int mNumTargets;
 
     public static final int TARGET_SOUND_ID = 0;
     public static final int CANNON_SOUND_ID = 1;
@@ -125,7 +125,7 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void newGame() {
-        mTargetsHit = 0;
+        mNumTargets = 2;
         mCannon = new Cannon(this, (int) (CANNON_BASE_RADIUS_PERCENT * mScreenHeight),
                 (int) (CANNON_BARREL_LENGTH_PERCENT * mScreenWidth),
                 (int) (CANNON_BARREL_WIDTH_PERCENT * mScreenHeight));
@@ -162,16 +162,16 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
         int targetX;
         int targetY;
         if (randX == 0 && randSide == 0) { //spawns on top and left
-            targetX = random.nextInt(mScreenWidth / 2 - 200) + 100;
+            targetX = random.nextInt(mScreenWidth / 2 - 230) + 10;
             targetY = 0;
         } else if (randX == 0 && randSide == 1) { //spawns on top and right
-            targetX = random.nextInt(mScreenWidth / 2 - 200) + mScreenWidth/2 + 100;
+            targetX = random.nextInt(mScreenWidth / 2 - 230) + mScreenWidth/2 + 215;
             targetY = 0;
         } else if (randX == 1 && randSide == 0) { //spawns on bottom and left
-            targetX = random.nextInt(mScreenWidth / 2 - 200) + 100;
+            targetX = random.nextInt(mScreenWidth / 2 - 230) + 10;
             targetY = mScreenHeight;
         } else {
-            targetX = random.nextInt(mScreenWidth / 2 - 200) + mScreenWidth/2 + 100;
+            targetX = random.nextInt(mScreenWidth / 2 - 230) + mScreenWidth/2 + 215;
             targetY = mScreenHeight;
         }
 
@@ -294,7 +294,6 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
                     mCannon.removeCannonball();
                     mTargets.remove(n);
                     --n;
-                    mTargetsHit++;
                     break;
                 }
             }
@@ -436,10 +435,11 @@ public class CannonView extends SurfaceView implements SurfaceHolder.Callback {
             while (mThreadIsRunning) {
                 try {
                     if (mTargets.isEmpty()) {
-                        for (int i = 0; i < mTargetsHit; i++) {
+                        for (int i = 0; i < mNumTargets; i++) {
                             spawnNewTarget();
                             sleep(250);
                         }
+                        mNumTargets++;
                     } else {
                         sleep(500);
                     }
